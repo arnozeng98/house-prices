@@ -1,0 +1,440 @@
+# ============================================================================
+# AMES HOUSING PRICE PREDICTION - CONFIGURATION FILE
+# 
+# This YAML file centralizes all global parameters for the project.
+# All modules and scripts load configuration from this single source of truth.
+# Supports easy parameter tuning without modifying code.
+# ============================================================================
+
+# ============================================================================
+# PROJECT SETTINGS
+# ============================================================================
+project:
+  name: "ames_housing_price_prediction"
+  description: "Advanced regression model for Ames housing dataset"
+  version: "1.0.0"
+  competition_url: "https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques"
+
+# ============================================================================
+# HARDWARE AND DEVICE CONFIGURATION
+# ============================================================================
+device:
+  # Use GPU if available (CUDA). Options: 'cuda', 'cpu', 'auto'
+  # 'auto' will automatically detect and use CUDA if available, fallback to CPU
+  type: "auto"
+  
+  # Force CPU mode regardless of CUDA availability (useful for debugging)
+  force_cpu: false
+  
+  # GPU device index (in case of multiple GPUs)
+  gpu_index: 0
+  
+  # Random seeds for reproducibility
+  seed: 42
+  numpy_seed: 42
+  torch_seed: 42
+
+# ============================================================================
+# DATA PATHS AND FILE MANAGEMENT
+# ============================================================================
+paths:
+  # Root directory paths
+  data_root: "data"
+  input_data: "data/input"
+  output_data: "data/output"
+  images_data: "data/img"
+  logs_root: "logs"
+  src_root: "src"
+  
+  # Training and test data files
+  train_csv: "data/input/train.csv"
+  test_csv: "data/input/test.csv"
+  sample_submission: "data/sample_submission.csv"
+  
+  # Ground truth and predictions
+  ground_truth_csv: "data/gt.csv"
+  
+  # Models and artifacts
+  models_dir: "artifacts/models"
+  scalers_dir: "artifacts/scalers"
+  feature_config_dir: "artifacts/feature_config"
+
+# ============================================================================
+# DATA PROCESSING CONFIGURATION
+# ============================================================================
+preprocessing:
+  # Handle missing values strategy
+  missing_value_strategy:
+    # For numerical features: 'mean', 'median', 'forward_fill', 'none'
+    numerical: "median"
+    # For categorical features: 'mode', 'forward_fill', 'drop', 'none'
+    categorical: "mode"
+  
+  # Numerical features scaling: 'standard' (z-score), 'robust', 'minmax', 'none'
+  numerical_scaler: "robust"
+  
+  # Categorical encoding: 'onehot', 'label', 'target', 'frequency'
+  categorical_encoder: "target"
+  
+  # Handle outliers (for numerical features)
+  outlier_handling:
+    enabled: true
+    method: "iqr"  # 'iqr' or 'zscore'
+    threshold: 1.5  # IQR multiplier or z-score threshold
+  
+  # Test-train split for cross-validation
+  test_size: 0.2
+  cv_folds: 5
+
+# ============================================================================
+# FEATURE ENGINEERING CONFIGURATION
+# ============================================================================
+feature_engineering:
+  # Enable automatic feature engineering
+  enabled: true
+  
+  # Numerical feature interactions
+  numerical_interactions:
+    enabled: true
+    # Create polynomial features up to this degree
+    polynomial_degree: 2
+    # Maximum number of interaction features to create
+    max_interactions: 50
+  
+  # Categorical feature combinations
+  categorical_interactions:
+    enabled: true
+    # Maximum interaction depth (combinations of N categorical features)
+    max_depth: 2
+  
+  # Domain-specific features (custom engineering for housing domain)
+  domain_features:
+    enabled: true
+    # List of domain-specific feature creation rules
+    rules:
+      - "total_area"  # Sum of all area features
+      - "quality_score"  # Combined quality metrics
+      - "age_features"  # Year-based features
+      - "location_quality"  # Location interaction with quality
+
+# ============================================================================
+# FEATURE SELECTION CONFIGURATION
+# ============================================================================
+feature_selection:
+  # Enable automatic feature selection
+  enabled: true
+  
+  # Boruta feature selection
+  boruta:
+    enabled: true
+    max_iterations: 100
+    random_state: 42
+    # Accept percentage threshold for feature acceptance
+    p_value: 0.01
+  
+  # Permutation importance
+  permutation_importance:
+    enabled: true
+    n_repeats: 10
+    threshold_percentile: 75  # Keep features above this percentile
+  
+  # Mutual information based selection
+  mutual_information:
+    enabled: true
+    threshold_percentile: 70
+  
+  # Keep at least this many features
+  min_features: 20
+  # Maximum features to keep (prevents curse of dimensionality)
+  max_features: 200
+
+# ============================================================================
+# MODEL CONFIGURATION - RANDOM FOREST
+# ============================================================================
+models:
+  random_forest:
+    # Enable/disable this model
+    enabled: true
+    
+    # Model hyperparameters (used if tuning is disabled)
+    params:
+      n_estimators: 200
+      max_depth: 15
+      min_samples_split: 5
+      min_samples_leaf: 2
+      max_features: "sqrt"
+      random_state: 42
+      n_jobs: -1
+    
+    # Optuna hyperparameter tuning ranges
+    optuna_ranges:
+      n_estimators: [100, 500]
+      max_depth: [10, 30]
+      min_samples_split: [2, 10]
+      min_samples_leaf: [1, 5]
+      max_features: ["sqrt", "log2"]
+  
+  # ============================================================================
+  # MODEL CONFIGURATION - XGBOOST
+  # ============================================================================
+  xgboost:
+    enabled: true
+    params:
+      n_estimators: 500
+      max_depth: 6
+      learning_rate: 0.05
+      subsample: 0.8
+      colsample_bytree: 0.8
+      reg_alpha: 0.01
+      reg_lambda: 1.0
+      random_state: 42
+      n_jobs: -1
+    
+    optuna_ranges:
+      max_depth: [3, 10]
+      learning_rate: [0.001, 0.3]
+      subsample: [0.5, 1.0]
+      colsample_bytree: [0.5, 1.0]
+      reg_alpha: [0.0, 1.0]
+      reg_lambda: [0.0, 2.0]
+  
+  # ============================================================================
+  # MODEL CONFIGURATION - CATBOOST
+  # ============================================================================
+  catboost:
+    enabled: true
+    params:
+      iterations: 500
+      depth: 6
+      learning_rate: 0.05
+      subsample: 0.8
+      verbose: 0
+      random_state: 42
+      thread_count: -1
+    
+    optuna_ranges:
+      depth: [4, 10]
+      learning_rate: [0.001, 0.3]
+      subsample: [0.5, 1.0]
+  
+  # ============================================================================
+  # MODEL CONFIGURATION - LIGHTGBM
+  # ============================================================================
+  lightgbm:
+    enabled: true
+    params:
+      n_estimators: 500
+      max_depth: 6
+      learning_rate: 0.05
+      num_leaves: 31
+      subsample: 0.8
+      colsample_bytree: 0.8
+      reg_alpha: 0.01
+      reg_lambda: 1.0
+      random_state: 42
+      n_jobs: -1
+    
+    optuna_ranges:
+      max_depth: [4, 10]
+      num_leaves: [15, 63]
+      learning_rate: [0.001, 0.3]
+      subsample: [0.5, 1.0]
+      colsample_bytree: [0.5, 1.0]
+      reg_alpha: [0.0, 1.0]
+      reg_lambda: [0.0, 2.0]
+  
+  # ============================================================================
+  # MODEL CONFIGURATION - TABNET (Deep Learning with GPU Support)
+  # ============================================================================
+  tabnet:
+    enabled: true
+    
+    # GPU/device specific settings
+    use_gpu: true  # Will auto-fallback to CPU if CUDA unavailable
+    gpu_device_id: 0
+    
+    params:
+      n_steps: 3
+      n_independent: 2
+      n_shared: 2
+      lambda_sparse: 1e-3
+      gamma: 1.5
+      epsilon: 1e-15
+      virtual_batch_size: 128
+      momentum: 0.9
+      mask_type: "softmax"
+      # Early stopping patience
+      patience: 20
+      # Batch size for training
+      batch_size: 256
+      # Maximum epochs
+      max_epochs: 200
+      seed: 42
+    
+    optuna_ranges:
+      n_steps: [2, 5]
+      n_independent: [1, 3]
+      n_shared: [1, 3]
+      lambda_sparse: [1e-4, 1e-2]
+      gamma: [1.0, 2.5]
+      momentum: [0.0, 0.99]
+  
+  # ============================================================================
+  # MODEL CONFIGURATION - ENSEMBLE
+  # ============================================================================
+  ensemble:
+    # Ensemble strategy: 'weighted_average', 'stacking', 'voting'
+    strategy: "weighted_average"
+    
+    # Weights for each model in weighted average (normalized automatically)
+    # Higher weight = more influence on final prediction
+    weights:
+      random_forest: 0.15
+      xgboost: 0.25
+      catboost: 0.25
+      lightgbm: 0.20
+      tabnet: 0.15
+    
+    # For stacking ensemble:
+    stacking:
+      enabled: false
+      meta_learner: "xgboost"  # Model to use as meta-learner
+      cv_folds: 5
+
+# ============================================================================
+# HYPERPARAMETER TUNING CONFIGURATION (OPTUNA)
+# ============================================================================
+tuning:
+  # Enable/disable hyperparameter tuning
+  enabled: true
+  
+  # Total number of trials for Optuna optimization
+  n_trials: 500
+  
+  # Maximum number of parallel trials (depends on GPU memory and system)
+  # Recommended: 1-2 for GPU, up to 4+ for CPU-only
+  max_parallel_trials: 2
+  
+  # Timeout for each trial in seconds (300 seconds = 5 minutes)
+  trial_timeout: 300
+  
+  # Sampler algorithm: 'TPE', 'CMA-ES', 'Random'
+  sampler: "TPE"
+  
+  # Early stopping patience (stop if no improvement after N trials)
+  early_stopping_rounds: 50
+  
+  # Cross-validation folds for objective function
+  cv_folds: 5
+  
+  # Optimization direction: 'minimize' (for RMSE) or 'maximize' (for R2)
+  direction: "minimize"
+  
+  # Random state for reproducibility
+  random_state: 42
+
+# ============================================================================
+# EVALUATION METRICS CONFIGURATION
+# ============================================================================
+evaluation:
+  # Primary metric for optimization
+  primary_metric: "rmse"  # 'rmse', 'mae', 'r2'
+  
+  # Additional metrics to compute
+  metrics:
+    - "rmse"
+    - "mae"
+    - "r2"
+    - "mape"
+  
+  # Cross-validation strategy
+  cv_strategy: "kfold"  # 'kfold', 'stratified_kfold'
+  cv_folds: 5
+
+# ============================================================================
+# VISUALIZATION CONFIGURATION
+# ============================================================================
+visualization:
+  # Output format for plots: 'png', 'jpg', 'pdf', 'svg'
+  output_format: "png"
+  
+  # DPI for saved figures
+  dpi: 300
+  
+  # Plot style: 'seaborn', 'ggplot', 'bmh', 'default'
+  style: "seaborn"
+  
+  # Figure size (width, height) in inches
+  figsize:
+    default: [12, 8]
+    feature_importance: [12, 10]
+    prediction_scatter: [10, 8]
+    correlation_heatmap: [14, 12]
+    error_distribution: [12, 8]
+  
+  # Generate plots for each model
+  plot_models:
+    - "random_forest"
+    - "xgboost"
+    - "catboost"
+    - "lightgbm"
+    - "tabnet"
+  
+  # Plot types to generate
+  plot_types:
+    - "feature_importance"
+    - "prediction_scatter"
+    - "error_distribution"
+    - "model_comparison"
+    - "correlation_heatmap"
+    - "optuna_history"
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+logging:
+  # Log level: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
+  level: "INFO"
+  
+  # Log file path
+  log_file: "logs/results.log"
+  
+  # Also print logs to console
+  console_output: true
+  
+  # Log format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  date_format: "%Y-%m-%d %H:%M:%S"
+
+# ============================================================================
+# GROUND TRUTH GENERATION (for comparing predictions with actual data)
+# ============================================================================
+ground_truth:
+  # Enable ground truth generation from public Ames dataset
+  enabled: true
+  
+  # Source of ground truth data
+  # Options: 'sklearn', 'seaborn', 'local'
+  source: "sklearn"
+  
+  # Save format for ground truth
+  save_format: "csv"  # 'csv', 'json', 'parquet'
+
+# ============================================================================
+# EXECUTION CONFIGURATION
+# ============================================================================
+execution:
+  # Show progress bars
+  show_progress: true
+  
+  # Verbosity level for models: 0 (quiet), 1 (progress), 2 (verbose)
+  verbosity: 1
+  
+  # Whether to save intermediate model artifacts
+  save_artifacts: true
+  
+  # Save predictions on train set for analysis
+  save_train_predictions: true
+  
+  # Save model metadata (feature names, preprocessing params)
+  save_metadata: true
