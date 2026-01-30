@@ -1,38 +1,38 @@
 # Core Data Processing and Analysis
-pandas>=2.1.4
+pandas>=2.0.0
 numpy>=1.26.0
-scipy>=1.11.4
+scipy>=1.11.0
 
 # Machine Learning Models
-scikit-learn>=1.3.2
-xgboost>=2.0.3
-catboost>=1.2.3
-lightgbm>=4.1.0
-pytorch-tabnet>=4.1.0
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+catboost>=1.2.0
+lightgbm>=4.0.0
+pytorch-tabnet>=4.0.0
 
 # Deep Learning and GPU Support
-torch>=2.1.1
-torchvision>=0.16.1
+torch>=2.0.0
+torchvision>=0.15.0
 
 # Hyperparameter Optimization
-optuna>=3.14.0
+optuna>=3.0.0
 
 # Feature Engineering and Selection
 boruta>=0.3
-shap>=0.44.0
+shap>=0.41.0
 
 # Visualization
-matplotlib>=3.8.2
-seaborn>=0.13.0
-plotly>=5.18.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.0.0
 
 # Progress Bars and Logging
-tqdm>=4.66.1
-PyYAML>=6.0.1
+tqdm>=4.60.0
+PyYAML>=6.0.0
 
 # Utilities
-joblib>=1.3.2
-python-dotenv>=1.0.0
+joblib>=1.2.0
+python-dotenv>=0.20.0
 
 # Optional: GPU acceleration (uncomment for CUDA 12.1)
 # torch-cuda-runtime==12.1
